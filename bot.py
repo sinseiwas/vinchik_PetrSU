@@ -6,7 +6,8 @@ import os
 from dotenv import load_dotenv
 import asyncio
 
-
+from database.models import async_main
+from handlers import start
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -16,10 +17,11 @@ dp = Dispatcher()
 
 
 async def main():
-	dp.include_routers()
-
+	await async_main()
+	dp.include_routers(start.router)
+	
 	await dp.start_polling(bot)
 
 
-if __name__ == "__name__":
+if __name__ == "__main__":
 	asyncio.run(main())

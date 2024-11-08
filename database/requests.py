@@ -29,6 +29,13 @@ async def set_user_form(user_id, name, age, form_text, photo_path=None):
             await session.commit()
 
 
+
+async def get_forms_by_user(user_id):
+    async with async_session() as session:
+        result = await session.execute(select(Form).filter_by(user_id=user_id))
+        forms = result.scalars().all()
+        return forms
+
 async def get_tg_id():
     async with async_session() as session:
         user_tg_id = await session.scalars(select(User.tg_id))

@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 import asyncio
 
 from database.models import async_main
-from handlers import start
+from handlers import start, make_form, send_form
+
+
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -18,7 +20,7 @@ dp = Dispatcher()
 
 async def main():
 	await async_main()
-	dp.include_routers(start.router)
+	dp.include_routers(start.router, make_form.router, send_form.router)
 	
 	await dp.start_polling(bot)
 

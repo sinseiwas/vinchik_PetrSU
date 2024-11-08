@@ -1,9 +1,14 @@
+import os
+import config
+
 from aiogram.fsm.state import StatesGroup, State
-from aiogram import F, Router
-from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
+from aiogram.filters import Command
+from aiogram.types import Message
+from aiogram import Router
+
 from bot import bot
+
 from database.requests import set_user_form
 
 router = Router()
@@ -47,16 +52,20 @@ async def get_form_text(message: Message, state: FSMContext):
 async def get_form_photo(message: Message, state: FSMContext):
     photo = message.photo[-1]
     file_name = f"{message.from_user.id}.jpg"
-    
-    file = await bot.download(photo.file_id, destination=f"./photo/{file_name}")
-    
+
+    await bot.download(
+        photo.file_id,
+        destination=os.path.join(config.PHOTO_FOLDER, file_name)
+    )
+
     await state.update_data(photo=file_name)
     data = await state.get_data()
     await set_user_form(
-                        user_id=message.from_user.id,
-                        name=data['name'],
-                        age=data['age'],
-                        form_text=data['form_text'],
-                        photo_path=data['photo']
-                        )
+        user_id=message.from_user.id,
+        name=data['name'],
+        age=data['age'],
+        form_text=data['form_text'],
+        photo_path=data['photo']
+    )
+    await state.clear()
     await message.answer(f"Фото сохранено и анкета завершена. {data}")

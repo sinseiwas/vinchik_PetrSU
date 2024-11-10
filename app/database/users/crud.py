@@ -2,6 +2,7 @@ from database.users.models import (
     async_session,
     User,
     Form,
+    Like
 )
 from sqlalchemy import select
 
@@ -84,3 +85,17 @@ async def get_tg_id():
         user_tg_id = await session.scalars(select(User.tg_id))
 
     return user_tg_id
+
+
+async def get_user_id():
+    async with async_session() as session:
+        result = await session.scalars(select(User.tg_id))
+
+        return result.all()
+
+
+async def add_like(user_id: int, liked_user_id: int):
+    async with async_session() as session:
+        like = Like(user_id=user_id, liked_user_id=liked_user_id)
+        session.add(like)
+        await session.commit()

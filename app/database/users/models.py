@@ -2,7 +2,9 @@ from sqlalchemy import (
     BigInteger,
     String,
     ForeignKey,
-    Integer
+    Integer,
+    DateTime,
+    func
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -16,6 +18,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine
 )
 
+# Создаем движок и сессию
 engine = create_async_engine(url='sqlite+aiosqlite:///vinchik.sqlite3')
 async_session = async_sessionmaker(engine)
 
@@ -49,6 +52,27 @@ class Form(Base):
     photo_path: Mapped[str] = mapped_column(String, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="forms")
+
+
+class Like(Base):
+    __tablename__ = 'likes'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False
+        )
+    liked_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False
+        )
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+
+    user: Mapped["User"] = relationship("User", foreign_keys=[user_id])
+    liked_user: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[liked_user_id]
+        )
 
 
 async def async_main():

@@ -12,4 +12,3 @@ START_MESSAGE = (
 NO_FORM_MESSAGE = (
     "Ты ещё не создал анкету"
 )
-

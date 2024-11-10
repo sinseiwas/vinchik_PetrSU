@@ -50,16 +50,25 @@ async def get_form_text(message: Message, state: FSMContext):
 
 @router.message(Form.photo)
 async def get_form_photo(message: Message, state: FSMContext):
+    # Путь к папке для фото
+    photo_folder = config.PHOTO_FOLDER
+
+    # Создание папки, если она не существует
+    if not os.path.exists(photo_folder):
+        os.makedirs(photo_folder)
+
+    # Получаем фото из сообщения
     photo = message.photo[-1]
     file_name = f"{message.from_user.id}.jpg"
-    print(config.PHOTO_FOLDER)
+
     await bot.download(
         photo.file_id,
-        destination=os.path.join(config.PHOTO_FOLDER, file_name)
+        destination=os.path.join(photo_folder, file_name)
     )
 
     await state.update_data(photo=file_name)
     data = await state.get_data()
+
     await set_user_form(
         user_id=message.from_user.id,
         name=data['name'],
@@ -67,5 +76,7 @@ async def get_form_photo(message: Message, state: FSMContext):
         form_text=data['form_text'],
         photo_path=data['photo']
     )
+
+    await message.answer("Фото сохранено и анкета завершена.")
+
     await state.clear()
-    await message.answer(f"Фото сохранено и анкета завершена. {data}")

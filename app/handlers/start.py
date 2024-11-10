@@ -1,7 +1,9 @@
 from aiogram import Router, types
 from aiogram.filters import Command
 
-import database.requests as rq
+import lang
+
+import database.users.crud as rq
 
 router = Router()
 
@@ -16,5 +18,5 @@ async def start_cmd(message: types.Message):
     )
 
     await message.answer(
-        'Hi, user'
+        lang.START_MESSAGE
     )

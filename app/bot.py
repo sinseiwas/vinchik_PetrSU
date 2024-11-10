@@ -6,7 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 
-from database.models import async_main
+from database.users.models import async_main
 
 from handlers import start, make_form, send_form
 

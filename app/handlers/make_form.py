@@ -9,7 +9,7 @@ from aiogram import Router
 
 from bot import bot
 
-from database.requests import set_user_form
+from database.users.crud import set_user_form
 
 router = Router()
 
@@ -52,7 +52,7 @@ async def get_form_text(message: Message, state: FSMContext):
 async def get_form_photo(message: Message, state: FSMContext):
     photo = message.photo[-1]
     file_name = f"{message.from_user.id}.jpg"
-
+    print(config.PHOTO_FOLDER)
     await bot.download(
         photo.file_id,
         destination=os.path.join(config.PHOTO_FOLDER, file_name)

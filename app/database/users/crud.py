@@ -6,7 +6,8 @@ from database.users.models import (
 )
 from sqlalchemy import (
     select,
-    insert
+    insert,
+    update
 )
 
 
@@ -114,52 +115,44 @@ async def set_user_like(user_id, liked_user_id):
             await session.commit()
 
 
-async def add_like(user_id: int, liked_user_id: int):
+async def add_like(user_id: int, liked_users_id: list()):
     async with async_session() as session:
-        await set_user_like(
-            user_id,
-            liked_user_id
-            )
         stmt = (
-            insert(Like)
-            .values({
-                "user_id": user_id,
-                "liked_user_id": liked_user_id,
-                }
-                )
+            update(Like)
+            .where(Like.user_id == user_id)
+            .values(liked_user_id=liked_users_id)
         )
-        result = await session.execute(stmt)
-        return result
+        await session.execute(stmt)
+        await session.commit()
 
 
-async def like_processing():
-    async with async_session() as session:
-        stmt = select(Like).where(Like.is_liked is False)
-        result = await session.execute(stmt)
-        liked = result.scalar_one_or_none()
+# async def like_processing(user_id):
+#     async with async_session() as session:
+#         stmt = select(Like).where(Like.user_id==user_id)
+#         result = await session.execute(stmt)
+#         liked = result.scalar_one_or_none()
 
-        if liked:
-            liked.is_liked = True
-            user_like = await session.scalar(
-                select(User.tg_id)
-                .where(User.id == liked.user_id)
-                )
+#         if liked:
+#             user_like = await session.scalar(
+#                 select(User.tg_id)
+#                 .where(User.id == liked.user_id)
+#                 )
 
-            user_liked = await session.scalar(
-                select(User.tg_id)
-                .where(User.id == liked.liked_user_id)
-                )
+#             user_liked = await session.scalar(
+#                 select(User.tg_id)
+#                 .where(User.id == liked.liked_user_id)
+#                 )
 
-            user_like_str = (
-                f"@{user_like}" if user_like
-                else "Неизвестный пользователь"
-                )
-            user_liked_str = (f"@{user_liked}" if user_liked
-                              else "Неизвестный пользователь"
-                              )
+#             user_like_str = (
+#                 f"@{user_like}" if user_like
+#                 else "Неизвестный пользователь"
+#                 )
+#             user_liked_str = (f"@{user_liked}" if user_liked
+#                               else "Неизвестный пользователь"
+#                               )
 
-            await session.commit()
+#             await session.commit()
 
-            return f"{user_like_str} -> {user_liked_str}"
-        else:
-            return 'lol'
+#             return f"{user_like_str} -> {user_liked_str}"
+#         else:
+#             return 'lol'

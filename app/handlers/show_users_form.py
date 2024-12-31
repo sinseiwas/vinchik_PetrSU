@@ -28,8 +28,15 @@ async def start_showing_forms(message: Message, state: FSMContext):
 
 async def display_form(message: Message, state: FSMContext):
     data = await state.get_data()
+    sender_user_id = message.from_user.id
     users_id = data["users_id"]
     current_index = data["current_index"]
+
+    while (
+        current_index < len(users_id)
+        and users_id[current_index] == sender_user_id
+    ):
+        current_index += 1
 
     if current_index < len(users_id):
         user_id = users_id[current_index]
@@ -42,7 +49,9 @@ async def display_form(message: Message, state: FSMContext):
         photo_path = config.PHOTO_FOLDER + form.photo_path
         photo = FSInputFile(photo_path)
 
+        await state.update_data(current_index=current_index)
         await state.set_state(LikesState.like)
+
         await message.answer_photo(
             photo,
             caption=response_text,

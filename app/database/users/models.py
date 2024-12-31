@@ -3,8 +3,6 @@ from sqlalchemy import (
     String,
     ForeignKey,
     Integer,
-    DateTime,
-    func
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -18,7 +16,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine
 )
 
-# Создаем движок и сессию
 engine = create_async_engine(url='sqlite+aiosqlite:///vinchik.sqlite3')
 async_session = async_sessionmaker(engine)
 
@@ -31,14 +28,29 @@ class User(Base):
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    tg_id: Mapped[int] = mapped_column(BigInteger, unique=True)
-    username: Mapped[str] = mapped_column(String(32), nullable=True)
-    first_name: Mapped[str] = mapped_column(String(32), nullable=True)
-    last_name: Mapped[str] = mapped_column(String(32), nullable=True)
+    tg_id: Mapped[int] = mapped_column(
+        BigInteger,
+        unique=True
+        )
+    username: Mapped[str] = mapped_column(
+        String(32),
+        nullable=True
+        )
+    first_name: Mapped[str] = mapped_column(
+        String(32),
+        nullable=True
+        )
+    last_name: Mapped[str] = mapped_column(
+        String(32),
+        nullable=True
+        )
     is_form: Mapped[bool] = mapped_column(default=False)
     is_active: Mapped[bool] = mapped_column(default=True)
 
-    forms: Mapped[list["Form"]] = relationship("Form", back_populates="user")
+    forms: Mapped[list["Form"]] = relationship(
+        "Form",
+        back_populates="user"
+        )
 
 
 class Form(Base):
@@ -46,10 +58,19 @@ class Form(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    name: Mapped[str] = mapped_column(String(64), nullable=True)
-    age: Mapped[int] = mapped_column(Integer, nullable=False)
+    name: Mapped[str] = mapped_column(
+        String(64),
+        nullable=True
+        )
+    age: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False
+        )
     form_text: Mapped[str] = mapped_column(String)
-    photo_path: Mapped[str] = mapped_column(String, nullable=True)
+    photo_path: Mapped[str] = mapped_column(
+        String,
+        nullable=True
+        )
 
     user: Mapped["User"] = relationship("User", back_populates="forms")
 
@@ -66,9 +87,6 @@ class Like(Base):
         ForeignKey("users.id"),
         nullable=False
         )
-    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
-
-    user: Mapped["User"] = relationship("User", foreign_keys=[user_id])
     liked_user: Mapped["User"] = relationship(
         "User",
         foreign_keys=[liked_user_id]

@@ -36,9 +36,13 @@ async def get_form_name(message: Message, state: FSMContext):
 
 @router.message(Form.age)
 async def get_form_age(message: Message, state: FSMContext):
-    await state.update_data(age=message.text)
-    await state.set_state(Form.form_text)
-    await message.answer('Введите текст анкеты:')
+    if message.text.isdigit():
+        age = int(message.text)
+        await state.update_data(age=age)
+        await state.set_state(Form.form_text) 
+        await message.answer('Введите текст анкеты:') 
+    else:  
+        await message.answer('Введите числовое значение')  
 
 
 @router.message(Form.form_text)
@@ -50,14 +54,11 @@ async def get_form_text(message: Message, state: FSMContext):
 
 @router.message(Form.photo)
 async def get_form_photo(message: Message, state: FSMContext):
-    # Путь к папке для фото
     photo_folder = config.PHOTO_FOLDER
 
-    # Создание папки, если она не существует
     if not os.path.exists(photo_folder):
         os.makedirs(photo_folder)
 
-    # Получаем фото из сообщения
     photo = message.photo[-1]
     file_name = f"{message.from_user.id}.jpg"
 

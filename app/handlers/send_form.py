@@ -5,7 +5,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile
 
-from database.users.crud import get_form_by_user
+from database.users.crud import get_form_by_user, like_processing
 
 router = Router()
 
@@ -27,3 +27,9 @@ async def send_my_form(message: Message):
         await message.answer_photo(photo, caption=response)
     else:
         await message.answer(lang.NO_FORM_MESSAGE)
+
+
+@router.message(Command('liked'))
+async def show_likes(message: Message):
+    result = await like_processing()
+    await message.answer(result)

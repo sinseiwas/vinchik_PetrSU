@@ -1,6 +1,6 @@
 __pycache__
 .env
-.venv
+.app/venv
 venv
 *.sqlite3
 photo/*.jpg

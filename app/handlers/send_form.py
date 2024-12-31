@@ -1,3 +1,4 @@
+import os
 import lang
 import config
 
@@ -21,7 +22,7 @@ async def send_my_form(message: Message):
             form_text=form.form_text
         )
 
-        photo_path = config.PHOTO_FOLDER + form.photo_path
+        photo_path = os.path.join(config.PHOTO_FOLDER, form.photo_path)
         photo = FSInputFile(photo_path)
 
         await message.answer_photo(photo, caption=response)

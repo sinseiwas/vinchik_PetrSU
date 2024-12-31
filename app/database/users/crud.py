@@ -92,7 +92,7 @@ async def get_tg_id():
 
 async def get_user_id():
     async with async_session() as session:
-        result = await session.scalars(select(User.tg_id))
+        result = await session.scalars(select(Form.user_id))
 
         return result.all()
 

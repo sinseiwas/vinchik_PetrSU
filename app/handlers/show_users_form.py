@@ -6,6 +6,7 @@ from aiogram.types import Message, CallbackQuery, FSInputFile
 from database.users import crud
 from keyboards.keyboards import get_like_keyboard
 
+import os
 import lang
 import config
 
@@ -46,7 +47,7 @@ async def display_form(message: Message, state: FSMContext):
             age=form.age,
             form_text=form.form_text
         )
-        photo_path = config.PHOTO_FOLDER + form.photo_path
+        photo_path = os.path.join(config.PHOTO_FOLDER, form.photo_path)
         photo = FSInputFile(photo_path)
 
         await state.update_data(current_index=current_index)
@@ -73,3 +74,4 @@ async def process_like_dislike(callback: CallbackQuery, state: FSMContext):
 
     await state.update_data(current_index=current_index + 1)
     await display_form(callback.message, state)
+    await callback.answer()

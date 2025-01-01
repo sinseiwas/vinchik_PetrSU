@@ -115,7 +115,7 @@ async def set_user_like(user_id, liked_user_id):
             await session.commit()
 
 
-async def add_like(user_id: int, liked_users_id: list()):
+async def add_like(user_id: int, liked_users_id: str):
     async with async_session() as session:
         stmt = (
             update(Like)

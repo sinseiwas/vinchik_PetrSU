@@ -3,4 +3,4 @@ __pycache__
 .app/venv
 venv
 *.sqlite3
-photo/*.jpg
+*.jpg

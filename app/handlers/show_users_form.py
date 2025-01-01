@@ -31,7 +31,7 @@ async def start_showing_forms(message: Message, state: FSMContext):
         await state.clear()
         return
 
-    await state.update_data(users_id=users_id, liked_users_id=[], current_index=0)
+    await state.update_data(users_id=users_id, liked_users_id='', current_index=0)
     await display_form(message, state)
 
 
@@ -42,6 +42,7 @@ async def display_form(message: Message, state: FSMContext):
 
     # Проверка на завершение показа анкет
     if current_index >= len(users_id):
+        await crud.set_user_like(message.from_user.id, data["liked_users_id"])
         await crud.add_like(message.from_user.id, data["liked_users_id"])
         await message.answer("Все анкеты показаны.")
         await state.clear()
@@ -70,7 +71,7 @@ async def process_like_dislike(callback: CallbackQuery, state: FSMContext):
     current_index = data["current_index"]
     users_id = data["users_id"]
     liked_users_id = data["liked_users_id"]
-    liked_users_id.append(users_id[current_index-1])
+    liked_users_id += str(users_id[current_index-1]) + " "
 
     if callback.data == "1":  # Если пользователь поставил "лайк"
         user_id = users_id[current_index - 1]  # Предыдущая анкета

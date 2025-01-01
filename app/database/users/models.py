@@ -83,7 +83,7 @@ class Like(Base):
         ForeignKey("users.id"),
         nullable=False
         )
-    liked_user_id: Mapped[int] = mapped_column(
+    liked_user_id: Mapped[str] = mapped_column(
         ForeignKey("users.id"),
         nullable=False
         )

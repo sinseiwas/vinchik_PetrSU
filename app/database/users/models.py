@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine
 )
 
+
 engine = create_async_engine(url='sqlite+aiosqlite:///vinchik.sqlite3')
 async_session = async_sessionmaker(engine)
 

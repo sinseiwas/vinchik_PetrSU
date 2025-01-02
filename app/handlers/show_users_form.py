@@ -3,7 +3,8 @@ from aiogram.filters import Command
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
-from database.users import crud
+from sqlalchemy.ext.asyncio import AsyncSession
+from database import crud
 from keyboards.keyboards import get_like_keyboard
 
 import os
@@ -12,16 +13,21 @@ import config
 
 router = Router()
 
-
 class LikesState(StatesGroup):
     form = State()
     like = State()
 
-
-@router.message(Command("find"))
-async def start_showing_forms(message: Message, state: FSMContext):
+@router.message(Command("watch_forms"))
+async def start_showing_forms(message: Message, state: FSMContext, session: AsyncSession):
+    is_form_active = await crud.get_is_active_form(session, message.from_user.id)
+    if is_form_active:
+        pass
+    else:
+        await message.answer("Сначала создайте анкету с помощью команды /create_form")
+        return
+        
     await state.set_state(LikesState.form)
-    users_id = await crud.get_user_id()
+    users_id = await crud.get_user_id(session)
 
     if message.from_user.id in users_id:
         users_id.remove(message.from_user.id)
@@ -32,10 +38,9 @@ async def start_showing_forms(message: Message, state: FSMContext):
         return
 
     await state.update_data(user_id=message.from_user.id, users_id=users_id, current_index=0)
-    await display_form(message, state)
+    await display_form(message, state, session)
 
-
-async def display_form(message: Message, state: FSMContext):
+async def display_form(message: Message, state: FSMContext, session: AsyncSession):
     data = await state.get_data()
     users_id = data["users_id"]
     current_index = data["current_index"]
@@ -46,7 +51,7 @@ async def display_form(message: Message, state: FSMContext):
         return
 
     user_id = users_id[current_index]
-    user_form = await crud.get_form_by_user(user_id)
+    user_form = await crud.get_form_by_user(session, user_id)
 
     photo_path = os.path.join(config.PHOTO_FOLDER, user_form.photo_path)
     photo = FSInputFile(photo_path)
@@ -63,7 +68,7 @@ async def display_form(message: Message, state: FSMContext):
 
 
 @router.callback_query(LikesState.like)
-async def process_like_dislike(callback: CallbackQuery, state: FSMContext):
+async def process_like_dislike(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     data = await state.get_data()
     user_id = data["user_id"]
     current_index = data["current_index"]
@@ -71,7 +76,7 @@ async def process_like_dislike(callback: CallbackQuery, state: FSMContext):
     liked_user_id = users_id[current_index - 1]
 
     if callback.data == "like":
-        await crud.add_like(user_id, liked_user_id)
+        await crud.add_like(session, user_id, liked_user_id)
 
     await callback.answer()
-    await display_form(callback.message, state)
+    await display_form(callback.message, state, session)

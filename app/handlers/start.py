@@ -1,20 +1,20 @@
-from aiogram import Router, types
+from aiogram import Router
 from aiogram.filters import Command
+from aiogram.types import Message
+from sqlalchemy.ext.asyncio import AsyncSession
+import database.crud as rq
 
 import lang
-
-import database.users.crud as rq
-
 router = Router()
 
-
-@router.message(Command('start'))
-async def start_cmd(message: types.Message):
+@router.message(Command("start"))
+async def start_cmd(message: Message, session: AsyncSession):
     await rq.set_user(
-        message.from_user.id,
-        message.from_user.username,
-        message.from_user.first_name,
-        message.from_user.last_name
+        session,
+        tg_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name
     )
 
     await message.answer(

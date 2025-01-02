@@ -5,3 +5,4 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 PHOTO_FOLDER = os.path.abspath(os.getenv("PHOTO_FOLDER"))
+DATABASE_URL = os.getenv("DATABASE_URL")

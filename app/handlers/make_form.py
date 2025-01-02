@@ -6,10 +6,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram import Router
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot import bot
 
-from database.users.crud import set_user_form
+from database.crud import set_user_form, set_active_form
 
 router = Router()
 
@@ -21,7 +22,7 @@ class Form(StatesGroup):
     photo = State()
 
 
-@router.message(Command('form'))
+@router.message(Command('create_form'))
 async def start_form(message: Message, state: FSMContext):
     await state.set_state(Form.name)
     await message.answer('Введите ваше имя:')
@@ -53,7 +54,7 @@ async def get_form_text(message: Message, state: FSMContext):
 
 
 @router.message(Form.photo)
-async def get_form_photo(message: Message, state: FSMContext):
+async def get_form_photo(message: Message, state: FSMContext, session: AsyncSession):
     photo_folder = config.PHOTO_FOLDER
 
     if not os.path.exists(photo_folder):
@@ -71,6 +72,7 @@ async def get_form_photo(message: Message, state: FSMContext):
     data = await state.get_data()
 
     await set_user_form(
+        session,
         user_id=message.from_user.id,
         name=data['name'],
         age=data['age'],
@@ -79,5 +81,6 @@ async def get_form_photo(message: Message, state: FSMContext):
     )
 
     await message.answer("Фото сохранено и анкета завершена.")
+    await set_active_form(session, message.from_user.id)
 
     await state.clear()

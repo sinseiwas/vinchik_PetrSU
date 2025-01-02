@@ -8,7 +8,7 @@ from aiogram.enums import ParseMode
 
 from database.users.models import async_main
 
-from handlers import start, make_form, send_form, show_users_form
+from handlers import start, make_form, send_form, show_users_form, show_like_to_user
 
 bot = Bot(token=config.BOT_TOKEN,
           default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -21,7 +21,8 @@ async def main():
         start.router,
         make_form.router,
         send_form.router,
-        show_users_form.router
+        show_users_form.router,
+        show_like_to_user.router
         )
 
     await dp.start_polling(bot)

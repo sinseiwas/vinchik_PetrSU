@@ -98,32 +98,21 @@ async def get_user_id():
         return result.all()
 
 
-async def set_user_like(user_id, liked_user_id):
+async def add_like(user_id: int, liked_user_id: int):
+    user_liked_id = Like(user_id=user_id, liked_user_id=liked_user_id)
     async with async_session() as session:
-        user = await session.scalar(
-            select(Like).
-            where(Like.user_id == user_id)
-            )
+        session.add(user_liked_id)
+        await session.commit()
 
-        if not user:
-            session.add(
-                Like(
-                    user_id=user_id,
-                    liked_user_id=liked_user_id
-                )
-            )
-            await session.commit()
-
-
-async def add_like(user_id: int, liked_users_id: str):
+async def get_likes_to_user(user_id):
     async with async_session() as session:
         stmt = (
-            update(Like)
-            .where(Like.user_id == user_id)
-            .values(liked_user_id=liked_users_id)
+            select(Like.user_id)
+            .where(Like.liked_user_id == user_id)
         )
-        await session.execute(stmt)
-        await session.commit()
+        result = await session.execute(stmt)
+        likes = result.scalars().all()  # Возвращает список всех записей
+        return likes
 
 
 # async def like_processing(user_id):

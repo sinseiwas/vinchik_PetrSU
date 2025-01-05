@@ -15,3 +15,7 @@ START_MESSAGE = (
 NO_FORM_MESSAGE = (
     "Ты ещё не создал анкету"
 )
+
+ALL_FORMS_WATCHED = (
+    "Все анкеты показаны.\nИскать дальше? /watch_forms"
+)

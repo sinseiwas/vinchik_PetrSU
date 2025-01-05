@@ -6,6 +6,8 @@ from aiogram.types import Message, CallbackQuery, FSInputFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import crud
 from keyboards.keyboards import get_yes_not_keyboard, get_like_keyboard
+import lang
+from time import sleep
 
 import os
 import lang
@@ -17,7 +19,7 @@ class LikeState(StatesGroup):
     form = State()
     like = State()
 
-@router.message(Command('i_liked'))
+@router.message(Command("show_likes"))
 async def show_likes(message: Message, state: FSMContext, session: AsyncSession):
     users_liked_id = []
     users_likes_id = await crud.get_likes_to_user(session, message.from_user.id)
@@ -27,10 +29,15 @@ async def show_likes(message: Message, state: FSMContext, session: AsyncSession)
         if user in users_likes_id:
             users_liked_id.append(user)
             likes_counter += 1
+            print(users_liked_id)
+
 
     if likes_counter == 0:
-        await message.answer('User have no likes')
-        return
+        print(likes_counter)
+        print("Все анкеты просмотрены"*10)
+        sleep(5)
+        await show_likes(message, state, session)
+
     else:
         await message.answer(
             f'Вы получили {likes_counter} лайков, хотите посмотреть?',
@@ -50,15 +57,18 @@ async def show_likes(message: Message, state: FSMContext, session: AsyncSession)
 
     await state.update_data(user_id=message.from_user.id, users_id=users_liked_id, current_index=0)
 
+
 @router.callback_query(F.data == 'yes')
-async def handle_yes_callback(callback_query: types.CallbackQuery, state: FSMContext, session: AsyncSession):
+async def handle_yes_callback(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    await callback.message.edit_reply_markup(reply_markup=None)
     data = await state.get_data()
     users_id = data["users_id"]
     current_index = data["current_index"]
 
     if current_index >= len(users_id):
-        await callback_query.message.answer("Все анкеты показаны.")
+        await callback.message.answer(lang.ALL_FORMS_WATCHED)
         await state.clear()
+        await show_likes(callback.message, state, session)
         return
 
     current_user_id = users_id[current_index]
@@ -73,9 +83,17 @@ async def handle_yes_callback(callback_query: types.CallbackQuery, state: FSMCon
         form_text=user_form.form_text
     )
 
-    await callback_query.message.answer_photo(photo, caption=response, reply_markup=get_like_keyboard())
+    if not callback.message.photo:
+        sleep(0.3)
+        await callback.message.delete()
+    await callback.message.answer_photo(photo, caption=response, reply_markup=get_like_keyboard())
     await state.update_data(current_index=current_index + 1)
     await state.set_state(LikeState.like)
+
+# @router.callback_query(F.data == 'not')
+# async def handle_yes_callback(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+#     await callback.message.delete()
+#     await show_likes(callback, state, session)
 
 @router.callback_query(LikeState.like)
 async def process_like_dislike(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
@@ -83,13 +101,15 @@ async def process_like_dislike(callback: CallbackQuery, state: FSMContext, sessi
     users_id = data["users_id"]
     current_index = data["current_index"]
     user_id = users_id[current_index - 1]
+
     if callback.data == "like":
         username = await crud.get_username(session, user_id)
         await callback.message.answer(
             f"У вас взаимный лайк с пользователем ID @{username}! 🎉"
         )
+    else:
+        await callback.message.answer("👎")
 
-    await callback.message.edit_reply_markup(reply_markup=None)
 
     await callback.answer()
     await handle_yes_callback(callback, state, session)

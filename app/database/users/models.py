@@ -17,9 +17,6 @@ from sqlalchemy.ext.asyncio import (
 )
 
 
-engine = create_async_engine(url='sqlite+aiosqlite:///vinchik.sqlite3')
-async_session = async_sessionmaker(engine)
-
 
 class Base(AsyncAttrs, DeclarativeBase):
     pass
@@ -92,8 +89,3 @@ class Like(Base):
         "User",
         foreign_keys=[liked_user_id]
         )
-
-
-async def async_main():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)

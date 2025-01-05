@@ -46,7 +46,7 @@ async def display_form(message: Message, state: FSMContext, session: AsyncSessio
     current_index = data["current_index"]
 
     if current_index >= len(users_id):
-        await message.answer("Все анкеты показаны.")
+        await message.answer(lang.ALL_FORMS_WATCHED)
         await state.clear()
         return
 
@@ -76,7 +76,12 @@ async def process_like_dislike(callback: CallbackQuery, state: FSMContext, sessi
     liked_user_id = users_id[current_index - 1]
 
     if callback.data == "like":
+        await callback.message.edit_reply_markup(reply_markup=None)
+        await callback.message.answer("👍")
         await crud.add_like(session, user_id, liked_user_id)
+    else:
+        await callback.message.edit_reply_markup(reply_markup=None)
+        await callback.message.answer("👎")
 
     await callback.answer()
     await display_form(callback.message, state, session)

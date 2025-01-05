@@ -3,12 +3,14 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 import database.crud as rq
+from handlers.show_like_to_user import show_likes
+from aiogram.fsm.context import FSMContext
 
 import lang
 router = Router()
 
 @router.message(Command("start"))
-async def start_cmd(message: Message, session: AsyncSession):
+async def start_cmd(message: Message, state: FSMContext, session: AsyncSession):
     await rq.set_user(
         session,
         tg_id=message.from_user.id,
@@ -20,3 +22,5 @@ async def start_cmd(message: Message, session: AsyncSession):
     await message.answer(
         lang.START_MESSAGE
     )
+
+    await show_likes(message, state, session)

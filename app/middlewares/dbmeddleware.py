@@ -4,26 +4,25 @@ from typing import (
     Callable,
     Awaitable
 )
-from sqlalchemy.ext.asyncio import AsyncSession
-from aiogram.types import TelegramObject
+from aiogram.types import CallbackQuery
 from aiogram.dispatcher.middlewares.base import BaseMiddleware
-from database.users.connect import get_session
+from database.base import get_session
+from database.users.crud import get_user
 
-class DBMiddleware(BaseMiddleware):
+class CallbackMiddleware(BaseMiddleware):
     async def __call__(
         self,
-        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-        event: TelegramObject,
+        handler: Callable[[CallbackQuery, Dict[str, Any]], Awaitable[Any]],
+        event: CallbackQuery,
         data: Dict[str, Any],
     ) -> Any:
         async for session in get_session():
-            if not isinstance(session, AsyncSession):
-                raise TypeError(f"Expected session to be AsyncSession, got {type(session)}")
+            user = await get_user(session, event.from_user.id)
+            if user.form is None:
+                await event.message.answer("Еблан ты не заполнил форму")
+                return
+
+            data['user'] = user
             data['session'] = session
-            try:
-                result = await handler(event, data)
-                await session.commit()
-                return result
-            except Exception:
-                await session.rollback()
-                raise
+            result = await handler(event, data)
+            return result

@@ -4,7 +4,8 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import crud
+from database.users import crud
+from database.users.models import User
 from keyboards.keyboards import get_like_keyboard
 
 import os
@@ -18,10 +19,9 @@ class LikesState(StatesGroup):
     like = State()
 
 @router.message(Command("watch_forms"))
-async def start_showing_forms(message: Message, state: FSMContext, session: AsyncSession):
+async def start_showing_forms(message: Message, user: User, state: FSMContext, session: AsyncSession):
     print(message.from_user.username)
-    is_form_active = await crud.get_is_active_form(session, message.from_user.id)
-    if is_form_active:
+    if user.form is not None:
         pass
     else:
         await message.answer("Сначала создайте анкету с помощью команды /create_form")

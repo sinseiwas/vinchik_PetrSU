@@ -1,10 +1,10 @@
-from aiogram import Router, F, types
+from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import crud
+from database.users import crud
 from keyboards.keyboards import get_yes_not_keyboard, get_like_keyboard
 import lang
 import asyncio
@@ -22,39 +22,41 @@ class LikeState(StatesGroup):
 
 @router.message(Command("show_likes"))
 async def show_likes(message: Message, state: FSMContext, session: AsyncSession):
-    print("show_likes"*10)
-    users_liked_id = []
-    users_likes_id = await crud.get_likes_to_user(session, message.from_user.id)
-    likes_counter = 0
-    for user in set(users_likes_id):
-        user_likes_id = await crud.get_likes_to_user(session, user)
-        if user in users_likes_id:
-            users_liked_id.append(user)
-            likes_counter += 1
-            print(users_liked_id)
+    while True:
+        print("show_likes"*10)
+        users_liked_id = []
+        users_likes_id = await crud.get_likes_to_user(session, message.from_user.id)
+        likes_counter = 0
+        for user in set(users_likes_id):
+            user_likes_id = await crud.get_likes_to_user(session, user)
+            if user in user_likes_id:
+                users_liked_id.append(user)
+                likes_counter += 1
+                print(users_liked_id)
 
 
-    if likes_counter == 0:
-        await state.clear()
-        return
-    else:
-        await message.answer(
-            f'Вы получили {likes_counter} лайков, хотите посмотреть?',
-            reply_markup=get_yes_not_keyboard()
-        )
+        if likes_counter == 0:
+            await state.clear()
+            return
+        else:
+            await message.answer(
+                f'Вы получили {likes_counter} лайков, хотите посмотреть?',
+                reply_markup=get_yes_not_keyboard()
+            )
 
-    await state.set_state(LikeState.form)
-    users_id = await crud.get_user_id(session)
+        await state.set_state(LikeState.form)
+        users_id = await crud.get_user_id(session)
 
-    if message.from_user.id in users_id:
-        users_id.remove(message.from_user.id)
+        if message.from_user.id in users_id:
+            users_id.remove(message.from_user.id)
 
-    if not users_id:
-        await message.answer("Нет доступных анкет.")
-        await state.clear()
-        return
+        if not users_id:
+            await message.answer("Нет доступных анкет.")
+            await state.clear()
+            return
 
-    await state.update_data(user_id=message.from_user.id, users_id=users_liked_id, current_index=0)
+        await state.update_data(user_id=message.from_user.id, users_id=users_liked_id, current_index=0)
+        await asyncio.sleep(5)
 
 
 @router.callback_query(F.data == 'yes')

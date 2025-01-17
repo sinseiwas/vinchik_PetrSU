@@ -144,20 +144,3 @@ async def get_username(session: AsyncSession, user_id):
     result = await session.execute(stmt)
     user = result.scalars().one()
     return user
-
-
-async def set_active_form(session: AsyncSession, user_id):
-    stmt = (
-        select(User)
-        .where(User.tg_id == user_id)
-    )
-    result = await session.execute(stmt)
-    user = result.scalar_one_or_none()
-    user.is_form = True
-
-
-async def get_is_active_form(session: AsyncSession, user_id: int) -> bool:
-    stmt = select(User.is_form).where(User.tg_id == user_id)
-    result = await session.execute(stmt)
-    is_form_active = result.scalar_one_or_none()
-    return is_form_active

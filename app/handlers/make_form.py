@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot import bot
 
-from database.crud import set_user_form, set_active_form
+from database.users.crud import set_user_form, set_active_form
 
 router = Router()
 

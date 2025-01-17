@@ -5,21 +5,13 @@ from sqlalchemy import (
     Integer,
 )
 from sqlalchemy.orm import (
-    DeclarativeBase,
     Mapped,
     mapped_column,
     relationship
 )
-from sqlalchemy.ext.asyncio import (
-    AsyncAttrs,
-    async_sessionmaker,
-    create_async_engine
-)
 
-
-
-class Base(AsyncAttrs, DeclarativeBase):
-    pass
+from typing import Optional
+from database.base import Base
 
 
 class User(Base):
@@ -42,49 +34,45 @@ class User(Base):
         String(32),
         nullable=True
         )
-    is_form: Mapped[bool] = mapped_column(default=False)
     is_active: Mapped[bool] = mapped_column(default=True)
 
-    forms: Mapped[list["Form"]] = relationship(
-        "Form",
-        back_populates="user"
-        )
+    form: Mapped[Optional["Form"]] = relationship(back_populates="user")
 
 
 class Form(Base):
     __tablename__ = 'forms'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     name: Mapped[str] = mapped_column(
         String(64),
         nullable=True
-        )
+    )
     age: Mapped[int] = mapped_column(
         Integer,
         nullable=False
-        )
+    )
     form_text: Mapped[str] = mapped_column(String)
     photo_path: Mapped[str] = mapped_column(
         String,
         nullable=True
-        )
+    )
 
-    user: Mapped["User"] = relationship("User", back_populates="forms")
+    user: Mapped[Optional["User"]] = relationship(back_populates="forms")
 
 
 class Like(Base):
     __tablename__ = 'likes'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
-        nullable=False
-        )
+        primary_key=True,
+    )
     liked_user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
-        nullable=False
-        )
+        primary_key=True,
+    )
+    # TODO User relationship
     liked_user: Mapped["User"] = relationship(
         "User",
         foreign_keys=[liked_user_id]

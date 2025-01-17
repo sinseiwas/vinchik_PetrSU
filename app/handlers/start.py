@@ -2,16 +2,10 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
-import database.crud as rq
-from handlers.show_like_to_user import show_likes
+import database.users.crud as rq
 from aiogram.fsm.context import FSMContext
-import schedule
 import lang
 router = Router()
-
-
-async def send_schedule_message(message, state, session):
-    schedule.every(5).seconds.do(show_likes, message, state, session)
 
 @router.message(Command("start"))
 async def start_cmd(message: Message, state: FSMContext, session: AsyncSession):
@@ -28,5 +22,3 @@ async def start_cmd(message: Message, state: FSMContext, session: AsyncSession):
     await message.answer(
         lang.START_MESSAGE
     )
-
-    await send_schedule_message(message, state, session)

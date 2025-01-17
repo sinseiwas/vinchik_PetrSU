@@ -62,6 +62,11 @@ async def update_form(session: AsyncSession, user_id, name, age, form_text, phot
     form.photo_path = photo_path
 
 
+async def get_all_users(session: AsyncSession):
+    result = await session.execute(select(User))
+    users = result.scalars().all()
+    return users
+
 async def get_user(session: AsyncSession, tg_id: int):
     stmt = (
         select(User)
@@ -93,8 +98,32 @@ async def get_user_id(session: AsyncSession):
 
 
 async def add_like(session: AsyncSession, user_id: int, liked_user_id: int):
-    user_liked_id = Like(user_id=user_id, liked_user_id=liked_user_id)
-    session.add(user_liked_id)
+    result = await session.execute(
+        select(Like).where(Like.user_id == user_id, Like.liked_user_id == liked_user_id)
+    )
+    existing_like = result.scalars().first()
+
+    if existing_like is None:
+        new_like = Like(user_id=user_id, liked_user_id=liked_user_id)
+        session.add(new_like)
+        await session.commit()
+        print(f"Лайк добавлен: {user_id} -> {liked_user_id}")
+    else:
+        print(f"Лайк уже существует: {user_id} -> {liked_user_id}")
+
+
+async def remove_like(session: AsyncSession, user_id: int, liked_user_id: int):
+    result = await session.execute(
+        select(Like).where(Like.user_id == liked_user_id, Like.liked_user_id == user_id)
+    )
+    existing_like = result.scalars().first()
+
+    if existing_like:
+        await session.delete(existing_like)
+        await session.commit()
+        print(f"Лайк удален: {liked_user_id} -> {user_id}")
+    else:
+        print(f"Взаимный лайк не найден: {liked_user_id} -> {user_id}")
 
 
 async def get_likes_to_user(session: AsyncSession, user_id):

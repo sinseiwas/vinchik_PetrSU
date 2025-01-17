@@ -19,6 +19,7 @@ class LikesState(StatesGroup):
 
 @router.message(Command("watch_forms"))
 async def start_showing_forms(message: Message, state: FSMContext, session: AsyncSession):
+    print(message.from_user.username)
     is_form_active = await crud.get_is_active_form(session, message.from_user.id)
     if is_form_active:
         pass

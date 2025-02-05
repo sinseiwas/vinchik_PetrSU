@@ -29,27 +29,26 @@ async def show_likes(session: AsyncSession):
     while True:
         print("show_likes"*10)  # Просто для отладки
 
-        async with AsyncSession() as session:
-            users = await crud.get_all_users(session)
+        users = await crud.get_all_users(session)
 
-            for user_id in users:
-                users_liked_id = []
-                users_likes_id = await crud.get_likes_to_user(session, user_id)
-                likes_counter = 0
+        for user_id in users:
+            users_liked_id = []
+            users_likes_id = await crud.get_likes_to_user(session, user_id)
+            likes_counter = 0
 
-                for user in set(users_likes_id):
-                    user_likes_id = await crud.get_likes_to_user(session, user)
-                    if user in user_likes_id:
-                        users_liked_id.append(user)
-                        likes_counter += 1
+            for user in set(users_likes_id):
+                user_likes_id = await crud.get_likes_to_user(session, user)
+                if user in user_likes_id:
+                    users_liked_id.append(user)
+                    likes_counter += 1
 
-                if likes_counter > 0:
-                    await bot.bot.send_message(
-                        user_id,
-                        f'Вы получили {likes_counter} \
-                        лайков, хотите посмотреть?',
-                        reply_markup=get_yes_not_keyboard()
-                    )
+            if likes_counter > 0:
+                await bot.bot.send_message(
+                    user_id,
+                    f'Вы получили {likes_counter} \
+                    лайков, хотите посмотреть?',
+                    reply_markup=get_yes_not_keyboard()
+                )
 
 
 @router.callback_query(F.data == 'yes')

@@ -13,4 +13,7 @@ class SessionMiddleware(BaseMiddleware):
     ) -> Any:
         async for session in get_session():
             data["session"] = session
-            await handler(event, data)
+            try:
+                return await handler(event, data)
+            finally:
+                await session.close()

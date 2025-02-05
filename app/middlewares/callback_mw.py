@@ -17,7 +17,6 @@ class CallbackMiddleware(BaseMiddleware):
         event: CallbackQuery,
         data: Dict[str, Any],
     ) -> Any:
-        print("12345")
         async for session in get_session():
             user = await get_user(session, event.from_user.id)
             if user.form is None:

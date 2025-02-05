@@ -8,9 +8,10 @@ from aiogram.types import Message
 from aiogram import Router
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot import bot
 
-from database.users.crud import set_user_form, set_active_form
+import bot
+
+from database.users.crud import set_user_form
 
 router = Router()
 
@@ -40,10 +41,10 @@ async def get_form_age(message: Message, state: FSMContext):
     if message.text.isdigit():
         age = int(message.text)
         await state.update_data(age=age)
-        await state.set_state(Form.form_text) 
-        await message.answer('Введите текст анкеты:') 
-    else:  
-        await message.answer('Введите числовое значение')  
+        await state.set_state(Form.form_text)
+        await message.answer('Введите текст анкеты:')
+    else:
+        await message.answer('Введите числовое значение')
 
 
 @router.message(Form.form_text)
@@ -54,7 +55,11 @@ async def get_form_text(message: Message, state: FSMContext):
 
 
 @router.message(Form.photo)
-async def get_form_photo(message: Message, state: FSMContext, session: AsyncSession):
+async def get_form_photo(
+    message: Message,
+    state: FSMContext,
+    session: AsyncSession
+):
     photo_folder = config.PHOTO_FOLDER
 
     if not os.path.exists(photo_folder):
@@ -63,7 +68,7 @@ async def get_form_photo(message: Message, state: FSMContext, session: AsyncSess
     photo = message.photo[-1]
     file_name = f"{message.from_user.id}.jpg"
 
-    await bot.download(
+    await bot.bot.download(
         photo.file_id,
         destination=os.path.join(photo_folder, file_name)
     )
@@ -81,6 +86,5 @@ async def get_form_photo(message: Message, state: FSMContext, session: AsyncSess
     )
 
     await message.answer("Фото сохранено и анкета завершена.")
-    await set_active_form(session, message.from_user.id)
 
     await state.clear()

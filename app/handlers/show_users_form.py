@@ -14,19 +14,28 @@ import config
 
 router = Router()
 
+
 class LikesState(StatesGroup):
     form = State()
     like = State()
 
+
 @router.message(Command("watch_forms"))
-async def start_showing_forms(message: Message, user: User, state: FSMContext, session: AsyncSession):
+async def start_showing_forms(
+    message: Message,
+    user: User,
+    state: FSMContext,
+    session: AsyncSession
+):
     print(message.from_user.username)
     if user.form is not None:
         pass
     else:
-        await message.answer("Сначала создайте анкету с помощью команды /create_form")
+        await message.answer(
+            "Сначала создайте анкету с помощью команды /create_form"
+            )
         return
-        
+
     await state.set_state(LikesState.form)
     users_id = await crud.get_user_id(session)
 
@@ -38,10 +47,19 @@ async def start_showing_forms(message: Message, user: User, state: FSMContext, s
         await state.clear()
         return
 
-    await state.update_data(user_id=message.from_user.id, users_id=users_id, current_index=0)
+    await state.update_data(
+        user_id=message.from_user.id,
+        users_id=users_id,
+        current_index=0
+        )
     await display_form(message, state, session)
 
-async def display_form(message: Message, state: FSMContext, session: AsyncSession):
+
+async def display_form(
+        message: Message,
+        state: FSMContext,
+        session: AsyncSession
+):
     data = await state.get_data()
     users_id = data["users_id"]
     current_index = data["current_index"]
@@ -63,13 +81,21 @@ async def display_form(message: Message, state: FSMContext, session: AsyncSessio
         form_text=user_form.form_text
     )
 
-    await message.answer_photo(photo, caption=response, reply_markup=get_like_keyboard())
+    await message.answer_photo(
+        photo,
+        caption=response,
+        reply_markup=get_like_keyboard()
+        )
     await state.update_data(current_index=current_index + 1)
     await state.set_state(LikesState.like)
 
 
 @router.callback_query(LikesState.like)
-async def process_like_dislike(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+async def process_like_dislike(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session: AsyncSession
+):
     data = await state.get_data()
     user_id = data["user_id"]
     current_index = data["current_index"]

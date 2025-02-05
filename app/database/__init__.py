@@ -1,9 +1,13 @@
-from .users.models import User
-from .base import Base, init_db
+from .users.models import User, Form, Like
+from .base import init_db
+from bot import bot
 
 
 __all__ = (
     "User",
+    "Form",
+    "Like",
     "Base",
-    "init_db"
+    "init_db",
+    "bot"
 )

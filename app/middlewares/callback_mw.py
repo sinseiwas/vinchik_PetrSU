@@ -9,6 +9,7 @@ from aiogram.dispatcher.middlewares.base import BaseMiddleware
 from database.base import get_session
 from database.users.crud import get_user
 
+
 class CallbackMiddleware(BaseMiddleware):
     async def __call__(
         self,
@@ -16,13 +17,13 @@ class CallbackMiddleware(BaseMiddleware):
         event: CallbackQuery,
         data: Dict[str, Any],
     ) -> Any:
+        print("12345")
         async for session in get_session():
             user = await get_user(session, event.from_user.id)
             if user.form is None:
-                await event.message.answer("Еблан ты не заполнил форму")
+                await event.message.answer("Вы не заполнили форму")
                 return
 
             data['user'] = user
             data['session'] = session
-            result = await handler(event, data)
-            return result
+            await handler(event, data)

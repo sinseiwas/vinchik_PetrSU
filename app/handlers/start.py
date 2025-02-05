@@ -7,8 +7,13 @@ from aiogram.fsm.context import FSMContext
 import lang
 router = Router()
 
+
 @router.message(Command("start"))
-async def start_cmd(message: Message, state: FSMContext, session: AsyncSession):
+async def start_cmd(
+    message: Message,
+    state: FSMContext,
+    session: AsyncSession
+):
     await rq.set_user(
         session,
         tg_id=message.from_user.id,

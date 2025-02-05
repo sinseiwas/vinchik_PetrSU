@@ -64,7 +64,7 @@ async def main():
         show_like_to_user.router
     )
 
-    # asyncio.create_task(periodic_task(10))
+    # asyncio.create_task(periodic_task(3600))
     await set_commands(bot)
     logging.info("Start polling")
     await dp.start_polling(bot)

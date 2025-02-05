@@ -17,7 +17,7 @@ class CallbackMiddleware(BaseMiddleware):
         event: CallbackQuery,
         data: Dict[str, Any],
     ) -> Any:
-        async for session in get_session():
+        async with get_session() as session:
             user = await get_user(session, event.from_user.id)
             if user.form is None:
                 await event.message.answer("Вы не заполнили форму")

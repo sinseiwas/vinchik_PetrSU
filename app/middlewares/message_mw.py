@@ -11,9 +11,6 @@ class SessionMiddleware(BaseMiddleware):
         event: Message,
         data: Dict[str, Any],
     ) -> Any:
-        async for session in get_session():
+        async with get_session() as session:
             data["session"] = session
-            try:
-                return await handler(event, data)
-            finally:
-                await session.close()
+            await handler(event, data)

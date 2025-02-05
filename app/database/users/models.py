@@ -17,7 +17,7 @@ from database.base import Base
 class User(Base):
     __tablename__ = 'users'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tg_id: Mapped[int] = mapped_column(
         BigInteger,
         unique=True
@@ -38,8 +38,10 @@ class User(Base):
 
     form: Mapped[Optional["Form"]] = relationship(
         "Form",
-        back_populates="user"
+        back_populates="user",
+        uselist=False
         )
+
 
 
 class Form(Base):
@@ -85,4 +87,8 @@ class Like(Base):
     liked_user: Mapped["User"] = relationship(
         "User",
         foreign_keys=[liked_user_id]
+        )
+    user_likes: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[user_id]
         )

@@ -28,8 +28,10 @@ class LikeState(StatesGroup):
 async def show_likes(session: AsyncSession):
     while True:
         print("show_likes"*10)  # Просто для отладки
+        print("----------------", "--------------")
 
         users = await crud.get_all_users(session)
+        print("----------------", users, "--------------")
 
         for user_id in users:
             users_liked_id = []

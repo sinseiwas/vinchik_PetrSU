@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from database.users.models import User, Like, Form
 
 
@@ -88,6 +89,7 @@ async def get_user(session: AsyncSession, tg_id: int):
     stmt = (
         select(User)
         .where(User.tg_id == tg_id)
+        .options(selectinload(User.form))
     )
     result = await session.execute(stmt)
     user = result.scalar_one_or_none()

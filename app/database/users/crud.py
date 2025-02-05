@@ -40,8 +40,10 @@ async def set_user(
 
 async def set_user_form(
         session: AsyncSession,
-        user_id, name,
-        age, form_text,
+        user_id,
+        name,
+        age,
+        form_text,
         photo_path=None
 ):
     form = await get_form_by_user(session, user_id)
@@ -169,3 +171,13 @@ async def get_username(session: AsyncSession, user_id):
     result = await session.execute(stmt)
     user = result.scalars().one()
     return user
+
+
+async def get_user_from_id(session, tg_id):
+    stmt = (
+        select(User.id)
+        .where(User.tg_id == tg_id)
+    )
+    result = await session.execute(stmt)
+    user_id = result.scalars().one()
+    return user_id

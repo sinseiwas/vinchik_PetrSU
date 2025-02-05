@@ -43,7 +43,6 @@ class User(Base):
         )
 
 
-
 class Form(Base):
     __tablename__ = 'forms'
 

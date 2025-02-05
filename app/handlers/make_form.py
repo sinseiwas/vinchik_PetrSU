@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import bot
 
-from database.users.crud import set_user_form
+from database.users.crud import set_user_form, get_user_from_id
 
 router = Router()
 
@@ -78,7 +78,7 @@ async def get_form_photo(
 
     await set_user_form(
         session,
-        user_id=message.from_user.id,
+        id=get_user_from_id(session, message.from_user.id),
         name=data['name'],
         age=data['age'],
         form_text=data['form_text'],

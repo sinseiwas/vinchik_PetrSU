@@ -41,7 +41,7 @@ async def set_commands(bot: Bot):
 
 async def periodic_task(interval: int):
     while True:
-        async for session in base.get_session():
+        async with base.get_session() as session:
             await show_like_to_user.show_likes(session)
         await asyncio.sleep(interval)
 

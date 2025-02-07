@@ -6,7 +6,8 @@ from database.users.models import User, Like, Form
 
 async def set_user(
         session: AsyncSession,
-        tg_id, username,
+        tg_id,
+        username,
         first_name,
         last_name
 ):
@@ -50,6 +51,7 @@ async def set_user_form(
     if form is None:
         session.add(
             Form(
+                # id=user_id,
                 user_id=user_id,
                 name=name,
                 age=age,

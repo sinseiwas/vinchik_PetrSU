@@ -78,7 +78,7 @@ async def get_form_photo(
 
     await set_user_form(
         session,
-        id=get_user_from_id(session, message.from_user.id),
+        user_id=await get_user_from_id(session, message.from_user.id),
         name=data['name'],
         age=data['age'],
         form_text=data['form_text'],

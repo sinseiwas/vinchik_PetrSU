@@ -47,10 +47,6 @@ class Form(Base):
     __tablename__ = 'forms'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id"),
-        nullable=True
-        )
     name: Mapped[str] = mapped_column(
         String(64),
         nullable=True
@@ -64,6 +60,10 @@ class Form(Base):
         String,
         nullable=True
     )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False
+        )
 
     user: Mapped[Optional["User"]] = relationship(
         "User",

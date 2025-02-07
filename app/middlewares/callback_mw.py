@@ -19,9 +19,9 @@ class CallbackMiddleware(BaseMiddleware):
     ) -> Any:
         async with get_session() as session:
             user = await get_user(session, event.from_user.id)
-            if user.form is None:
-                await event.message.answer("Вы не заполнили форму")
-                return
+            # if user.form is None:
+            #     await event.message.answer("Вы не заполнили форму")
+            #     return
 
             data['user'] = user
             data['session'] = session

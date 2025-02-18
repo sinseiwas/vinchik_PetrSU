@@ -9,6 +9,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.types import BotCommand
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import TEST, PRODUCTION
 
 from handlers import (
     start,
@@ -21,11 +23,6 @@ from middlewares.callback_mw import CallbackMiddleware
 from middlewares.message_mw import SessionMiddleware
 
 
-bot = Bot(token=config.BOT_TOKEN,
-          default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-dp = Dispatcher()
-
-
 async def set_commands(bot: Bot):
     commands = [
         BotCommand(command="/start", description="Запустить бота"),
@@ -34,7 +31,7 @@ async def set_commands(bot: Bot):
         BotCommand(
             command="/watch_forms",
             description="Смотреть чужие анкеты"
-            ),
+        ),
     ]
     await bot.set_my_commands(commands)
 
@@ -47,11 +44,21 @@ async def periodic_task(interval: int):
 
 
 async def main():
-    if not os.path.exists(config.DATABASE_URL):
+    if not os.path.exists(config.DATABASE_URL) or "reload" in sys.argv:
         await database.init_db()
 
-    if "reload" in sys.argv:
-        await database.init_db()
+    if config.IS_DEV_SERVER:
+        session = AiohttpSession(api=TEST)
+    else:
+        session = AiohttpSession(api=PRODUCTION)
+
+    bot = Bot(
+        token=config.BOT_TOKEN,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+        session=session
+    )
+
+    dp = Dispatcher()
 
     dp.message.middleware(SessionMiddleware())
     dp.callback_query.middleware(CallbackMiddleware())
@@ -66,6 +73,7 @@ async def main():
 
     # asyncio.create_task(periodic_task(3600))
     await set_commands(bot)
+
     logging.info("Start polling")
     await dp.start_polling(bot)
 

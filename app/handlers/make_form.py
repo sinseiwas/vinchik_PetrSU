@@ -8,9 +8,6 @@ from aiogram.types import Message
 from aiogram import Router
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-import bot
-
 from database.users.crud import set_user_form, get_user_from_id
 
 router = Router()
@@ -68,7 +65,7 @@ async def get_form_photo(
     photo = message.photo[-1]
     file_name = f"{message.from_user.id}.jpg"
 
-    await bot.bot.download(
+    await message.bot.download(
         photo.file_id,
         destination=os.path.join(photo_folder, file_name)
     )

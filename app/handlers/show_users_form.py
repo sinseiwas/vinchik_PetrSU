@@ -27,8 +27,7 @@ async def start_showing_forms(
     state: FSMContext,
     session: AsyncSession
 ):
-    print(message.from_user.username)
-    # может быть, стоит оставить это в мидлваре
+    # TODO может быть, стоит оставить это в мидлваре
     # if user.form is not None:
     #     pass
     # else:

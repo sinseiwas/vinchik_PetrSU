@@ -1,30 +1,23 @@
 from aiogram import Router
 from aiogram.filters import Command
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.users import crud
 # from database.users.models import User
-from keyboards.keyboards import get_like_keyboard
+from keyboards.keyboards import get_like_keyboard, LikeCallbackFactory
 
 import os
 import lang
 import config
 
+
 router = Router()
-
-
-class LikesState(StatesGroup):
-    form = State()
-    like = State()
 
 
 @router.message(Command("watch_forms"))
 async def start_showing_forms(
     message: Message,
     # user: User,
-    state: FSMContext,
     session: AsyncSession
 ):
     # TODO может быть, стоит оставить это в мидлваре
@@ -36,7 +29,6 @@ async def start_showing_forms(
     #         )
     #     return
 
-    await state.set_state(LikesState.form)
     users_id = await crud.get_user_id(session)
 
     if message.from_user.id in users_id:
@@ -44,32 +36,21 @@ async def start_showing_forms(
 
     if not users_id:
         await message.answer("Нет доступных анкет.")
-        await state.clear()
         return
 
-    await state.update_data(
-        user_id=message.from_user.id,
-        users_id=users_id,
-        current_index=0
-        )
-    await display_form(message, state, session)
+    await display_form(message, session, users_id)
 
 
 async def display_form(
         message: Message,
-        state: FSMContext,
-        session: AsyncSession
+        session: AsyncSession,
+        users_id,
 ):
-    data = await state.get_data()
-    users_id = data["users_id"]
-    current_index = data["current_index"]
-
-    if current_index >= len(users_id):
+    if not users_id:
         await message.answer(lang.ALL_FORMS_WATCHED)
-        await state.clear()
         return
 
-    user_id = users_id[current_index]
+    user_id = users_id[0]
     user_form = await crud.get_form_by_user(session, user_id)
 
     photo_path = os.path.join(config.PHOTO_FOLDER, user_form.photo_path)
@@ -82,33 +63,28 @@ async def display_form(
     )
 
     await message.answer_photo(
-        photo,
+        photo=photo,
         caption=response,
-        reply_markup=get_like_keyboard()
+        reply_markup=get_like_keyboard(user_id)
         )
-    await state.update_data(current_index=current_index + 1)
-    await state.set_state(LikesState.like)
 
 
-@router.callback_query(LikesState.like)
+@router.callback_query(LikeCallbackFactory.filter())
 async def process_like_dislike(
     callback: CallbackQuery,
-    state: FSMContext,
-    session: AsyncSession
+    callback_data: LikeCallbackFactory,
+    session: AsyncSession,
+    users_id,
 ):
-    data = await state.get_data()
-    user_id = data["user_id"]
-    current_index = data["current_index"]
-    users_id = data["users_id"]
-    liked_user_id = users_id[current_index - 1]
+    liked_user_id = callback_data.user_id
 
-    if callback.data == "like":
+    if callback_data.is_liked:
         await callback.message.edit_reply_markup(reply_markup=None)
         await callback.message.answer("👍")
-        await crud.add_like(session, user_id, liked_user_id)
+        await crud.add_like(session, callback.from_user.id, liked_user_id)
     else:
         await callback.message.edit_reply_markup(reply_markup=None)
         await callback.message.answer("👎")
 
     await callback.answer()
-    await display_form(callback.message, state, session)
+    await display_form(callback.message, session, users_id)

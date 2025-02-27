@@ -10,6 +10,11 @@ class LikeCallbackFactory(CallbackData, prefix="like"):
     user_like_id: int
 
 
+class YesCallbackFactory(CallbackData, prefix="likes"):
+    is_agree: bool
+    user_id: int
+
+
 def get_like_keyboard(user_id, user_like_id):
     buttons = [
         [
@@ -36,11 +41,23 @@ def get_like_keyboard(user_id, user_like_id):
     return keyboard
 
 
-def get_yes_not_keyboard():
+def get_yes_not_keyboard(user_id):
     buttons = [
         [
-            types.InlineKeyboardButton(text="Да", callback_data="yes"),
-            types.InlineKeyboardButton(text="Нет", callback_data="not")
+            types.InlineKeyboardButton(
+                text="Да",
+                callback_data=YesCallbackFactory(
+                    is_agree=True,
+                    user_id=user_id
+                    ).pack()
+            ),
+            types.InlineKeyboardButton(
+                text="Нет",
+                callback_data=YesCallbackFactory(
+                    is_agree=False,
+                    user_id=user_id
+                    ).pack()
+            ),
         ]
     ]
 

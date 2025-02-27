@@ -36,10 +36,10 @@ async def set_commands(bot: Bot):
     await bot.set_my_commands(commands)
 
 
-async def periodic_task(interval: int):
+async def periodic_task(interval: int, bot):
     while True:
         async with base.get_session() as session:
-            await show_like_to_user.show_likes(session)
+            await show_like_to_user.show_likes(session, bot)
         await asyncio.sleep(interval)
 
 
@@ -71,7 +71,7 @@ async def main():
         show_like_to_user.router
     )
 
-    # asyncio.create_task(periodic_task(3600))
+    asyncio.create_task(periodic_task(3600, bot))
     await set_commands(bot)
 
     logging.info("Start polling")

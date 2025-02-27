@@ -51,6 +51,11 @@ class User(Base):
         foreign_keys="[Like.liked_user_id]",
         back_populates="liked_user"
     )
+    disliked_user: Mapped[list["Like"]] = relationship(
+        "Like",
+        foreign_keys="[Like.disliked_user_id]",
+        back_populates="disliked_user"
+    )
 
 
 class Form(Base):
@@ -91,6 +96,11 @@ class Like(Base):
     liked_user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
         primary_key=True,
+        nullable=True
+    )
+    disliked_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True
     )
 
     user_likes: Mapped["User"] = relationship(
@@ -102,4 +112,9 @@ class Like(Base):
         "User",
         foreign_keys=[liked_user_id],
         back_populates="liked_user_like"
+        )
+    disliked_user: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[disliked_user_id],
+        back_populates="disliked_user"
         )

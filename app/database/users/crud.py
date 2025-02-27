@@ -123,6 +123,11 @@ async def get_users_id(session: AsyncSession):
     return result.all()
 
 
+async def get_users_tg_id(session: AsyncSession):
+    result = await session.scalars(select(User.tg_id))
+    return result.all()
+
+
 async def add_like(
         session: AsyncSession,
         user_id: int,
@@ -134,7 +139,7 @@ async def add_like(
             Like.liked_user_id == liked_user_id
             )
     )
-    existing_like = result.scalars().first()
+    existing_like = result.scalar_one_or_none()
 
     if existing_like is None:
         new_like = Like(
@@ -148,11 +153,34 @@ async def add_like(
         print(f"Лайк уже существует: {user_id} -> {liked_user_id}")
 
 
+async def add_dislike(session: AsyncSession, user_id, user_disliked_id):
+    result = await session.execute(
+        select(Like).where(
+            Like.user_id == user_id,
+            Like.disliked_user_id == user_disliked_id
+            )
+    )
+    existing_dislike = result.scalar_one_or_none()
+
+    if existing_dislike is None:
+        new_dislike = Like(
+            user_id=user_id,
+            liked_user_id=user_disliked_id,
+            disliked_user_id=user_disliked_id
+            )
+        session.add(new_dislike)
+        await session.flush()
+        print(f"Дизлайк добавлен: {user_id} -> {user_disliked_id}")
+    else:
+        print(f"Дизлайк уже существует: {user_id} -> {user_disliked_id}")
+
+
 async def remove_like(session: AsyncSession, user_id: int, liked_user_id: int):
     result = await session.execute(
         select(Like).where(
             Like.user_id == liked_user_id,
-            Like.liked_user_id == user_id
+            Like.liked_user_id == user_id,
+            Like.disliked_user_id.is_(None)
             )
     )
     existing_like = result.scalars().first()
@@ -164,10 +192,16 @@ async def remove_like(session: AsyncSession, user_id: int, liked_user_id: int):
         print(f"Взаимный лайк не найден: {liked_user_id} -> {user_id}")
 
 
-async def get_likes_to_user(session: AsyncSession, user_id):
+# async get_disliked_users(session: AsyncSession, user_id)
+
+
+async def get_likes_to_user(session: AsyncSession, user_id, disliked_user_id):
     stmt = (
         select(Like.user_id)
-        .where(Like.liked_user_id == user_id)
+        .where(
+            Like.liked_user_id == user_id,
+            Like.disliked_user_id != disliked_user_id
+            )
     )
     result = await session.execute(stmt)
     likes = result.scalars().all()
@@ -177,7 +211,7 @@ async def get_likes_to_user(session: AsyncSession, user_id):
 async def get_username(session: AsyncSession, user_id):
     stmt = (
         select(User.username)
-        .where(User.tg_id == user_id)
+        .where(User.id == user_id)
     )
     result = await session.execute(stmt)
     user = result.scalars().one()
@@ -218,3 +252,20 @@ async def get_random_user_id(session: AsyncSession, user_id):
 
     random_user = result.scalar_one_or_none()
     return random_user
+
+
+async def get_user_mutual_likes(session: AsyncSession, user_id):
+    stmt = (
+        select(User.id)
+        .where(
+            User.id != user_id,
+            User.form is not None,
+            User.user_like.any(Like.liked_user_id == user_id),
+            User.liked_user_like.any(Like.user_id == user_id),
+            Like.disliked_user_id is not None
+            )
+    )
+
+    result = await session.execute(stmt)
+    mutual_likes = result.scalars().all()
+    return mutual_likes

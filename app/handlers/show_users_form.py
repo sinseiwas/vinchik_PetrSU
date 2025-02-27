@@ -69,6 +69,7 @@ async def process_like_dislike(
         await callback.message.answer("👍")
         await crud.add_like(session, user_id, liked_user_id)
     else:
+        await crud.add_dislike(session, user_id, liked_user_id)
         await callback.message.edit_reply_markup(reply_markup=None)
         await callback.message.answer("👎")
 

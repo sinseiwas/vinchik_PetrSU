@@ -7,7 +7,7 @@ from typing import (
 from aiogram.types import CallbackQuery
 from aiogram.dispatcher.middlewares.base import BaseMiddleware
 from database.base import get_session
-from database.users.crud import get_user, get_user_id
+from database.users.crud import get_user  # get_users_id
 
 
 class CallbackMiddleware(BaseMiddleware):
@@ -25,5 +25,5 @@ class CallbackMiddleware(BaseMiddleware):
 
             data['user'] = user
             data['session'] = session
-            data['users_id'] = await get_user_id(session)
+            # data['users_id'] = await get_users_id(session)
             await handler(event, data)

@@ -20,38 +20,23 @@ async def start_showing_forms(
     # user: User,
     session: AsyncSession
 ):
-    # TODO может быть, стоит оставить это в мидлваре
-    # if user.form is not None:
-    #     pass
-    # else:
-    #     await message.answer(
-    #         "Сначала создайте анкету с помощью команды /create_form"
-    #         )
-    #     return
+    user_id = await crud.get_user_id(session, message.from_user.id)
 
-    users_id = await crud.get_user_id(session)
-
-    if message.from_user.id in users_id:
-        users_id.remove(message.from_user.id)
-
-    if not users_id:
-        await message.answer("Нет доступных анкет.")
-        return
-
-    await display_form(message, session, users_id)
+    await display_form(message, session, user_id)
 
 
 async def display_form(
         message: Message,
         session: AsyncSession,
-        users_id,
+        user_id,
 ):
-    if not users_id:
+    user_like_id = await crud.get_random_user_id(session, user_id)
+
+    if not user_like_id:
         await message.answer(lang.ALL_FORMS_WATCHED)
         return
 
-    user_id = users_id[0]
-    user_form = await crud.get_form_by_user(session, user_id)
+    user_form = await crud.get_form_by_user(session, user_like_id)
 
     photo_path = os.path.join(config.PHOTO_FOLDER, user_form.photo_path)
     photo = FSInputFile(photo_path)
@@ -61,11 +46,12 @@ async def display_form(
         age=user_form.age,
         form_text=user_form.form_text
     )
+    print(user_form.age, user_form.name, user_form.form_text, user_like_id)
 
     await message.answer_photo(
         photo=photo,
         caption=response,
-        reply_markup=get_like_keyboard(user_id)
+        reply_markup=get_like_keyboard(user_id, user_like_id)
         )
 
 
@@ -74,17 +60,17 @@ async def process_like_dislike(
     callback: CallbackQuery,
     callback_data: LikeCallbackFactory,
     session: AsyncSession,
-    users_id,
 ):
-    liked_user_id = callback_data.user_id
+    liked_user_id = callback_data.user_like_id
+    user_id = await crud.get_user_id(session, callback.from_user.id)
 
     if callback_data.is_liked:
         await callback.message.edit_reply_markup(reply_markup=None)
         await callback.message.answer("👍")
-        await crud.add_like(session, callback.from_user.id, liked_user_id)
+        await crud.add_like(session, user_id, liked_user_id)
     else:
         await callback.message.edit_reply_markup(reply_markup=None)
         await callback.message.answer("👎")
 
     await callback.answer()
-    await display_form(callback.message, session, users_id)
+    await display_form(callback.message, session, user_id)

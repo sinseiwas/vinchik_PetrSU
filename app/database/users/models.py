@@ -41,6 +41,16 @@ class User(Base):
         back_populates="user",
         uselist=False
         )
+    user_like: Mapped[list["Like"]] = relationship(
+        "Like",
+        foreign_keys="[Like.user_id]",
+        back_populates="user_likes"
+    )
+    liked_user_like: Mapped[list["Like"]] = relationship(
+        "Like",
+        foreign_keys="[Like.liked_user_id]",
+        back_populates="liked_user"
+    )
 
 
 class Form(Base):
@@ -82,12 +92,14 @@ class Like(Base):
         ForeignKey("users.id"),
         primary_key=True,
     )
-    # TODO User relationship
-    liked_user: Mapped["User"] = relationship(
-        "User",
-        foreign_keys=[liked_user_id]
-        )
+
     user_likes: Mapped["User"] = relationship(
         "User",
-        foreign_keys=[user_id]
+        foreign_keys=[user_id],
+        back_populates="user_like"
+        )
+    liked_user: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[liked_user_id],
+        back_populates="liked_user_like"
         )

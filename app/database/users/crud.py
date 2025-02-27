@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from database.users.models import User, Like, Form
+from sqlalchemy import func
 
 
 async def set_user(
@@ -51,7 +52,6 @@ async def set_user_form(
     if form is None:
         session.add(
             Form(
-                # id=user_id,
                 user_id=user_id,
                 name=name,
                 age=age,
@@ -73,7 +73,7 @@ async def update_form(
 ):
     stmt = (
         select(Form)
-        .where(Form.user_id == user_id)
+        .where(Form.user_id == User.id)
     )
     result = await session.execute(stmt)
     form = result.scalar_one_or_none()
@@ -100,27 +100,34 @@ async def get_user(session: AsyncSession, tg_id: int):
     return user
 
 
-async def get_form_by_user(session: AsyncSession, user_id):
+async def get_form_by_user(session: AsyncSession, user_like_id):
     stmt = (
         select(Form)
-        .where(Form.user_id == user_id)
+        .where(user_like_id == Form.user_id)
     )
     result = await session.execute(stmt)
-    form = result.scalar_one_or_none()
+    form = result.scalars().first()
     return form
 
 
-async def get_tg_id(session: AsyncSession):
-    user_tg_id = await session.scalars(select(User.tg_id))
-    return user_tg_id
+async def get_user_id(session: AsyncSession, user_tg_id):
+    user_id = await session.scalars(
+        select(User.id)
+        .where(user_tg_id == User.tg_id)
+        )
+    return user_id.first()
 
 
-async def get_user_id(session: AsyncSession):
-    result = await session.scalars(select(Form.user_id))
+async def get_users_id(session: AsyncSession):
+    result = await session.scalars(select(User.id))
     return result.all()
 
 
-async def add_like(session: AsyncSession, user_id: int, liked_user_id: int):
+async def add_like(
+        session: AsyncSession,
+        user_id: int,
+        liked_user_id: int
+        ):
     result = await session.execute(
         select(Like).where(
             Like.user_id == user_id,
@@ -130,9 +137,11 @@ async def add_like(session: AsyncSession, user_id: int, liked_user_id: int):
     existing_like = result.scalars().first()
 
     if existing_like is None:
-        new_like = Like(user_id=user_id, liked_user_id=liked_user_id)
+        new_like = Like(
+            user_id=user_id,
+            liked_user_id=liked_user_id
+            )
         session.add(new_like)
-        await session.commit()
         print(f"Лайк добавлен: {user_id} -> {liked_user_id}")
     else:
         print(f"Лайк уже существует: {user_id} -> {liked_user_id}")
@@ -149,7 +158,6 @@ async def remove_like(session: AsyncSession, user_id: int, liked_user_id: int):
 
     if existing_like:
         await session.delete(existing_like)
-        await session.commit()
         print(f"Лайк удален: {liked_user_id} -> {user_id}")
     else:
         print(f"Взаимный лайк не найден: {liked_user_id} -> {user_id}")
@@ -183,3 +191,29 @@ async def get_user_from_id(session, tg_id):
     result = await session.execute(stmt)
     user_id = result.scalars().one()
     return user_id
+
+
+async def get_user_likes_id(session, user_id):
+    stmt = (
+        select(Like.liked_user_id)
+        .where(Like.user_id == user_id)
+    )
+    result = await session.execute(stmt)
+    user_likes_id = result.scalars().all()
+    return user_likes_id
+
+
+async def get_random_user_id(session: AsyncSession, user_id):
+    stmt = (
+        select(User.id)
+        .where(
+            User.id != user_id,
+            User.form is not None,
+            ~User.user_like.any(Like.user_id == user_id)
+            )
+        .order_by(func.random()).limit(1)
+    )
+    result = await session.execute(stmt)
+
+    random_user = result.scalar_one_or_none()
+    return random_user

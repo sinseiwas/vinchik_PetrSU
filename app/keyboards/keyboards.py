@@ -7,23 +7,26 @@ from aiogram.filters.callback_data import CallbackData
 class LikeCallbackFactory(CallbackData, prefix="like"):
     is_liked: bool
     user_id: int
+    user_like_id: int
 
 
-def get_like_keyboard(user_id):
+def get_like_keyboard(user_id, user_like_id):
     buttons = [
         [
             types.InlineKeyboardButton(
                 text="Лайк",
                 callback_data=LikeCallbackFactory(
                     is_liked=True,
-                    user_id=user_id
+                    user_id=user_id,
+                    user_like_id=user_like_id
                 ).pack()
             ),
             types.InlineKeyboardButton(
                 text="Дизлайк",
                 callback_data=LikeCallbackFactory(
                     is_liked=False,
-                    user_id=user_id
+                    user_id=user_id,
+                    user_like_id=user_like_id
                 ).pack()
             )
         ]

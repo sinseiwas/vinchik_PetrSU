@@ -142,6 +142,7 @@ async def add_like(
             liked_user_id=liked_user_id
             )
         session.add(new_like)
+        await session.flush()
         print(f"Лайк добавлен: {user_id} -> {liked_user_id}")
     else:
         print(f"Лайк уже существует: {user_id} -> {liked_user_id}")
@@ -209,7 +210,7 @@ async def get_random_user_id(session: AsyncSession, user_id):
         .where(
             User.id != user_id,
             User.form is not None,
-            ~User.user_like.any(Like.user_id == user_id)
+            ~User.liked_user_like.any(Like.user_id == user_id)
             )
         .order_by(func.random()).limit(1)
     )

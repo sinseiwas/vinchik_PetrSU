@@ -62,6 +62,12 @@ async def get_form_photo(
     if not os.path.exists(photo_folder):
         os.makedirs(photo_folder)
 
+    if not message.photo:
+        await message.answer(
+            "Вы отправили не фотографию, отправьте, пожалуйста фотографию"
+            )
+        return
+
     photo = message.photo[-1]
     file_name = f"{message.from_user.id}.jpg"
 

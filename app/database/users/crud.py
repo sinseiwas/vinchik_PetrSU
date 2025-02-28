@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from database.users.models import User, Like, Form
-from sqlalchemy import func
+from sqlalchemy import func, distinct
 
 
 async def set_user(
@@ -76,7 +76,7 @@ async def update_form(
         .where(Form.user_id == User.id)
     )
     result = await session.execute(stmt)
-    form = result.scalar_one_or_none()
+    form = result.scalars().first()
     form.name = name
     form.age = age
     form.form_text = form_text
@@ -136,7 +136,8 @@ async def add_like(
     result = await session.execute(
         select(Like).where(
             Like.user_id == user_id,
-            Like.liked_user_id == liked_user_id
+            Like.liked_user_id == liked_user_id,
+            Like.disliked_user_id.is_(False)
             )
     )
     existing_like = result.scalar_one_or_none()
@@ -144,7 +145,8 @@ async def add_like(
     if existing_like is None:
         new_like = Like(
             user_id=user_id,
-            liked_user_id=liked_user_id
+            liked_user_id=liked_user_id,
+            disliked_user_id=False
             )
         session.add(new_like)
         await session.flush()
@@ -157,7 +159,7 @@ async def add_dislike(session: AsyncSession, user_id, user_disliked_id):
     result = await session.execute(
         select(Like).where(
             Like.user_id == user_id,
-            Like.disliked_user_id == user_disliked_id
+            Like.disliked_user_id.is_(True)
             )
     )
     existing_dislike = result.scalar_one_or_none()
@@ -166,7 +168,7 @@ async def add_dislike(session: AsyncSession, user_id, user_disliked_id):
         new_dislike = Like(
             user_id=user_id,
             liked_user_id=user_disliked_id,
-            disliked_user_id=user_disliked_id
+            disliked_user_id=True
             )
         session.add(new_dislike)
         await session.flush()
@@ -180,7 +182,7 @@ async def remove_like(session: AsyncSession, user_id: int, liked_user_id: int):
         select(Like).where(
             Like.user_id == liked_user_id,
             Like.liked_user_id == user_id,
-            Like.disliked_user_id.is_(None)
+            Like.disliked_user_id.is_(False)
             )
     )
     existing_like = result.scalars().first()
@@ -192,15 +194,12 @@ async def remove_like(session: AsyncSession, user_id: int, liked_user_id: int):
         print(f"Взаимный лайк не найден: {liked_user_id} -> {user_id}")
 
 
-# async get_disliked_users(session: AsyncSession, user_id)
-
-
-async def get_likes_to_user(session: AsyncSession, user_id, disliked_user_id):
+async def get_likes_to_user(session: AsyncSession, user_id):
     stmt = (
         select(Like.user_id)
         .where(
             Like.liked_user_id == user_id,
-            Like.disliked_user_id != disliked_user_id
+            Like.disliked_user_id.is_(False)
             )
     )
     result = await session.execute(stmt)
@@ -256,13 +255,13 @@ async def get_random_user_id(session: AsyncSession, user_id):
 
 async def get_user_mutual_likes(session: AsyncSession, user_id):
     stmt = (
-        select(User.id)
+        select(distinct(User.id))
         .where(
             User.id != user_id,
             User.form is not None,
             User.user_like.any(Like.liked_user_id == user_id),
             User.liked_user_like.any(Like.user_id == user_id),
-            Like.disliked_user_id is not None
+            Like.disliked_user_id.is_(False)
             )
     )
 
